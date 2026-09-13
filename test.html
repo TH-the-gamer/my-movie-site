@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Private Library</title>
+<style>
+  :root{
+    --bg: #0b0b0d;
+    --surface: #16161a;
+    --surface-2: #1f1f24;
+    --border: #2a2a30;
+    --text: #f2f1ee;
+    --text-dim: #9a9aa2;
+    --accent: #d98e3f;
+    --accent-dim: #7a5326;
+    --focus: #e8b072;
+    --radius: 10px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    margin: 0;
+    padding: 0 20px 60px;
+  }
+
+  a { color: inherit; }
+
+  .top{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-top: 32px;
+  }
+
+  .top h1{
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin: 0 0 4px;
+  }
+
+  .top p.sub{
+    color: var(--text-dim);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  /* Player */
+  .player-section{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 32px;
+  }
+
+  .player-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .player-header h2{
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .player-header h2 .playing-title{
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  video{
+    width: 100%;
+    max-height: 520px;
+    background: #000;
+    border-radius: 6px;
+    display: block;
+  }
+
+  .player-empty{
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    background: #000;
+    border-radius: 6px;
+    border: 1px dashed var(--border);
+  }
+
+  .player-error{
+    display: none;
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #2a1414;
+    border: 1px solid #4a2020;
+    border-radius: 6px;
+    color: #f2a3a3;
+    font-size: 13px;
+  }
+
+  .controls{
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: #1a1204;
+    padding: 9px 16px;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn:hover{ background: #e8a15c; }
+  .btn:focus-visible{ outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .btn.secondary{
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .btn.secondary:hover{ color: var(--text); border-color: var(--text-dim); }
+
+  .btn[hidden]{ display: none; }
+
+  /* Library header row */
+  .library-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+
+  .library-header h2{
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .library-header .count{
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .search-wrap{
+    position: relative;
+    width: 240px;
+    max-width: 100%;
+  }
+
+  .search-wrap input{
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px 8px 32px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .search-wrap input::placeholder{ color: var(--text-dim); }
+  .search-wrap input:focus{
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .search-wrap svg{
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    opacity: 0.5;
+  }
+
+  /* Grid */
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 18px;
+  }
+
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+    text-align: left;
+    padding: 0;
+  }
+
+  .card:hover, .card:focus-visible{
+    border-color: var(--accent-dim);
+    transform: translateY(-2px);
+  }
+  .card:focus-visible{ outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .card.active{
+    border-color: var(--accent);
+  }
+
+  .poster{
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    position: relative;
+  }
+
+  .poster .now-badge{
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--accent);
+    color: #1a1204;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .card-body{
+    padding: 10px 12px 12px;
+  }
+
+  .card-body h3{
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-body .play-lbl{
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .empty-state{
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px){
+    .grid{ grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    .top h1{ font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>My Private Library</h1>
+  <p class="sub">Your uploaded files, ready to watch or download.</p>
+
+  <div class="player-section">
+    <div class="player-header">
+      <h2 id="player-status">Nothing playing — pick something below</h2>
+    </div>
+
+    <div id="player-empty" class="player-empty">Select a title to start watching</div>
+    <video id="video-player" controls preload="metadata" style="display:none;"></video>
+    <div id="player-error" class="player-error">This file couldn't be loaded. Check the link still works, then try again.</div>
+
+    <div class="controls">
+      <a id="download-link" href="#" class="btn" download hidden>Download file</a>
+      <button id="restart-btn" class="btn secondary" hidden>Restart from beginning</button>
+    </div>
+  </div>
+
+  <div class="library-header">
+    <h2>All titles <span class="count" id="result-count"></span></h2>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search-input" type="text" placeholder="Search titles…" aria-label="Search titles">
+    </div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+  <div id="empty-state" class="empty-state" hidden>No titles match your search.</div>
+</div>
+
+<script>
+  // Add or edit entries here — that's the only thing you need to touch.
+  const MOVIES = [
+    { title: 'Abar Proloy 1', url: 'https://huggingface.co/datasets/OfficeTimeFunTime/OfficeTrial/resolve/ac6dba81d4800e85fbd7e0b8863cd1b28ef31b25/MovieLinkBD.com%20-%20Abar.Proloy.2023.720p.Bangla.AAC.WEB-DL.h264.mkv?download=true' },
+    { title: 'Abar Proloy 2', url: 'https://huggingface.co/datasets/OfficeTimeFunTime/OfficeTrial/resolve/main/MovieLinkBD.com%20-%20Abar.Proloy.2026.720p.Bangla.AAC.WEB-DL.h264.mkv?download=true' },
+  ];
+
+  const grid = document.getElementById('grid');
+  const emptyState = document.getElementById('empty-state');
+  const resultCount = document.getElementById('result-count');
+  const searchInput = document.getElementById('search-input');
+
+  const player = document.getElementById('video-player');
+  const playerEmpty = document.getElementById('player-empty');
+  const playerError = document.getElementById('player-error');
+  const playerStatus = document.getElementById('player-status');
+  const downloadLink = document.getElementById('download-link');
+  const restartBtn = document.getElementById('restart-btn');
+
+  let activeIndex = null;
+
+  // Deterministic color per title so posters stay stable across reloads.
+  function colorFor(title){
+    let hash = 0;
+    for (let i = 0; i < title.length; i++) hash = title.charCodeAt(i) + ((hash << 5) - hash);
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 40%, 22%)`;
+  }
+
+  function initials(title){
+    return title.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  }
+
+  function renderGrid(filterText){
+    const query = (filterText || '').trim().toLowerCase();
+    grid.innerHTML = '';
+
+    const matches = MOVIES
+      .map((movie, index) => ({ ...movie, index }))
+      .filter(m => m.title.toLowerCase().includes(query));
+
+    resultCount.textContent = MOVIES.length ? `(${matches.length} of ${MOVIES.length})` : '';
+    emptyState.hidden = matches.length !== 0;
+
+    matches.forEach(movie => {
+      const card = document.createElement('div');
+      card.className = 'card' + (movie.index === activeIndex ? ' active' : '');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Play ${movie.title}`);
+
+      const poster = document.createElement('div');
+      poster.className = 'poster';
+      poster.style.background = colorFor(movie.title);
+      poster.textContent = initials(movie.title);
+      if (movie.index === activeIndex) {
+        const badge = document.createElement('span');
+        badge.className = 'now-badge';
+        badge.textContent = 'NOW PLAYING';
+        poster.appendChild(badge);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.innerHTML = `<h3>${escapeHtml(movie.title)}</h3><span class="play-lbl">▶ Watch or download</span>`;
+
+      card.appendChild(poster);
+      card.appendChild(body);
+
+      card.addEventListener('click', () => playVideo(movie.index));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playVideo(movie.index); }
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function playVideo(index){
+    const movie = MOVIES[index];
+    if (!movie) return;
+
+    activeIndex = index;
+    playerError.style.display = 'none';
+    playerEmpty.style.display = 'none';
+    player.style.display = 'block';
+
+    player.src = movie.url;
+    player.play().catch(() => { /* autoplay may be blocked; controls remain available */ });
+
+    playerStatus.innerHTML = `Now playing: <span class="playing-title">${escapeHtml(movie.title)}</span>`;
+    downloadLink.href = movie.url;
+    downloadLink.hidden = false;
+    restartBtn.hidden = false;
+
+    renderGrid(searchInput.value);
+    document.querySelector('.player-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  player.addEventListener('error', () => {
+    playerError.style.display = 'block';
+  });
+
+  restartBtn.addEventListener('click', () => {
+    player.currentTime = 0;
+    player.play();
+  });
+
+  searchInput.addEventListener('input', e => renderGrid(e.target.value));
+
+  renderGrid('');
+</script>
+
+</body>
+</html>
